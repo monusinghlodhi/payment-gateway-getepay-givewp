@@ -2,9 +2,10 @@
 /*
 Plugin Name:  Payment Gateway GetePay GiveWP
 Plugin URI:   https://getepay.in/
-Description:  GetePay New Payment Gateway Support for Give Donation Platform
-Version:      1.0
-Author:       GetePay
+Description:  GetePay Payment Gateway Support for Give Donation Platform
+Version:      1.0.0
+Author:       Monu Singh
+Text Domain:  payment-gateway-getepay-givewp
 Author URI:   https://monusingh.com/
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -14,22 +15,22 @@ if (! defined( 'ABSPATH' )) {
 }
 
  /* GetePay Functions */
- if (!function_exists('format_amount')){
-    function format_amount($amt)
+ if (!function_exists('give_getepay_format_amount')){
+    function give_getepay_format_amount($amt)
     {
         $remove_dot = str_replace('.', '', $amt);
         $remove_comma = str_replace(',', '', $remove_dot);
         return $remove_comma;
     }
 }
-if (!function_exists('getepay_signature')){
-    function getepay_signature($source)
+if (!function_exists('give_getepay_signature')){
+    function give_getepay_signature($source)
     {
         return base64_encode(hex2bin(sha1($source)));
     }
 }
-if (!function_exists('hex2bin')){
-    function hex2bin($hexSource)
+if (!function_exists('give_getepay_hex2bin')){
+    function give_getepay_hex2bin($hexSource)
     {
         for ($i=0;$i<strlen($hexSource);$i=$i+2)
         {
@@ -41,7 +42,7 @@ if (!function_exists('hex2bin')){
  /* End of GetePay Functions */
 
 /* Plugin Dependencies */
-function check_give_plugin_dependency() {
+function give_getepay_check_plugin_dependency() {
     if ( is_admin() && current_user_can( 'activate_plugins' ) &&  !is_plugin_active( 'give/give.php' ) ) {
         add_action( 'admin_notices', 'give_plugin_notification' );
 
@@ -55,12 +56,12 @@ function check_give_plugin_dependency() {
 function give_plugin_notification(){
     ?><div class="error"><p>Sorry, but <strong>Give GetePay Payment Gateway</strong> requires the <strong><a href="/wp-admin/plugin-install.php?tab=plugin-information&plugin=give">Give - Donation Plugin</a></strong> to be installed and active.</p></div><?php
 }
-add_action( 'admin_init', 'check_give_plugin_dependency' );
+add_action( 'admin_init', 'give_getepay_check_plugin_dependency' );
 /* End of Plugin Dependencies */
 
 /* Disabled Plugin Activation Link */
 function give_getepay_payment_gateway_activation( $links, $file ) {
-    if ( 'givewp-getepay/give-getepay-payment-gateway.php' == $file and isset($links['activate']) )
+    if ( 'payment-gateway-getepay-givewp/payment-gateway-getepay-givewp.php' == $file and isset($links['activate']) )
         $links['activate'] = '<span>Activate</span>';
 
     return $links;
@@ -68,98 +69,85 @@ function give_getepay_payment_gateway_activation( $links, $file ) {
 add_filter( 'plugin_action_links', 'give_getepay_payment_gateway_activation', 10, 2 );
 /* End of Disabled Plugin Activation Link */
 
-function getepay_gateway_plugin_linkss( $links ) {
+function give_getepay_gateway_plugin_links( $links ) {
 	$plugin_links = array(
 		'<a href="' . admin_url( 'edit.php?post_type=give_forms&page=give-settings&tab=gateways&section=getepay' ) . '">' . __( 'Configure', 'woocommerce-getepay-payment' ) . '</a>'
 	);
 	return array_merge( $plugin_links, $links );
 }
-add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'getepay_gateway_plugin_linkss' );
+add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'give_getepay_gateway_plugin_links' );
 
 /* Payment Gateway Section */
-function add_getepay_payment_gateway($gateways)
+function give_getepay_payment_gateway($gateways)
 {
     $gateways['getepay'] = array(
-        'admin_label'    => __( 'GetePay', 'give' ),
-        'checkout_label' => __( 'GetePay', 'give' ),
+        'admin_label'    => __( 'GetePay', 'payment-gateway-getepay-givewp' ),
+        'checkout_label' => __( 'GetePay', 'payment-gateway-getepay-givewp' ),
     );
     return $gateways;
 }
-add_filter( 'give_payment_gateways', 'add_getepay_payment_gateway');
+add_filter( 'give_payment_gateways', 'give_getepay_payment_gateway');
 /* End of Payment Gateway Section */
 
 /* Gateway Section */
-function add_getepay_gateway_section($sections)
+function give_getepay_gateway_section($sections)
 {
-    $sections['getepay'] = __( 'GetePay', 'give' );
+    $sections['getepay'] = __( 'GetePay', 'payment-gateway-getepay-givewp' );
     return $sections;
 }
-add_filter( 'give_get_sections_gateways', 'add_getepay_gateway_section');
+add_filter( 'give_get_sections_gateways', 'give_getepay_gateway_section');
 /* End of Gateway Section */
 
 /* Gateway Settings */
-function add_getepay_gateway_settings($settings)
+function give_getepay_gateway_settings($settings)
 {
     $current_section = give_get_current_setting_section();
     switch ($current_section) {
         case 'getepay':
             $settings = array(
                 array(
-                    'name' => __('GatePay Settings', 'give'),
+                    'name' => __('GatePay Settings', 'payment-gateway-getepay-givewp'),
                     'type' => 'title',
                     'id'   => 'give_title_gateway_settings_getepay',
                 ),
                 array(
-                    'name' => __( 'Organization Name', 'give' ),
-                    'desc' => __( 'Enter your organization name details to be displayed to your donors.', 'give' ),
+                    'name' => __( 'Organization Name', 'payment-gateway-getepay-givewp' ),
+                    'desc' => __( 'Enter your organization name details to be displayed to your donors.', 'payment-gateway-getepay-givewp' ),
                     'id'   => 'getepay_merchant_name',
                     'type' => 'text',
                     ),
                 array(
-                    'name' => __( 'Request Url', 'give' ),
-                    'desc' => __( 'Getepay Payment Url', 'give' ),
+                    'name' => __( 'Request Url', 'payment-gateway-getepay-givewp' ),
+                    'desc' => __( 'Getepay Payment Url', 'payment-gateway-getepay-givewp' ),
                     'id'   => 'getepay_request_url',
                     'type' => 'text',                    
-                    'default'     => __( 'http://164.52.216.34:8085/getepayPortal/pg/generateInvoice', 'give' ),
-                    //'desc_tip'    => true,
+                    'default'     => __( 'http://164.52.216.34:8085/getepayPortal/pg/generateInvoice', 'payment-gateway-getepay-givewp' ),
                     ),
                 array(
-                    'name' => __( 'MID', 'give' ),
-                    'desc' => __( 'GetePay MID. Your MID can be found in our dashboard.', 'give' ),
+                    'name' => __( 'MID', 'payment-gateway-getepay-givewp' ),
+                    'desc' => __( 'GetePay MID. Your MID can be found in our Getepay dashboard.', 'payment-gateway-getepay-givewp' ),
                     'id'   => 'getepay_mid',
                     'type' => 'text',
                     ),
 
                 array(
-                    'name'       => __( 'Terminal Id', 'give' ),
-                    'desc' => __( 'Getepay Terminal Id', 'give' ),
+                    'name'       => __( 'Terminal Id', 'payment-gateway-getepay-givewp' ),
+                    'desc' => __( 'Getepay Terminal Id. Your Terminal Id can be found in our Getepay dashboard.', 'payment-gateway-getepay-givewp' ),
                     'id'   => 'getepay_terminal_id',
                     'type'        => 'text',
-                    //'desc_tip'    => true,
                     ),
                 array(
-                    'name' => __( 'Getepay Key', 'give' ),
-                    'desc' => __( 'GetePay key. Your GatePay Key can be found in our dashboard.', 'give' ),
+                    'name' => __( 'Getepay Key', 'payment-gateway-getepay-givewp' ),
+                    'desc' => __( 'GetePay key. Your GatePay Key can be found in our Getepay dashboard.', 'payment-gateway-getepay-givewp' ),
                     'id'   => 'getepay_api_key',
                     'type' => 'text',
                     ),
                 array(
-                    'name' => __( 'Getepay IV', 'give' ),
-                    'desc' => __( 'Getepay IV. Your Getepay IV Key can be found in our dashboard.', 'give' ),
+                    'name' => __( 'Getepay IV', 'payment-gateway-getepay-givewp' ),
+                    'desc' => __( 'Getepay IV. Your Getepay IV Key can be found in our Getepay dashboard.', 'payment-gateway-getepay-givewp' ),
                     'id'   => 'getepay_secret_key',
                     'type' => 'text',
                     ),
-                    // array(
-                    //     'name' => __('Billing Fields', 'give'),
-                    //     'desc' => __('This option will enable the billing details section for GatePay which requires the donor\'s address to complete the donation. These fields are not required by GatePay to process the transaction, but you may have the need to collect the data.', 'give-gatepay'),
-                    //     'id' => 'getepay_collect_billing',
-                    //     'type' => 'radio_inline',
-                    //     'default' => 'disabled',
-                    //     'options' => array(
-                    //         'enabled' => __('Enabled', 'give'),
-                    //         'disabled' => __('Disabled', 'give'),
-                    //     ),
-                    // ),
                 array(
                     'type' => 'sectionend',
                     'id'   => 'give_title_gateway_settings_getepay',
@@ -169,7 +157,7 @@ function add_getepay_gateway_settings($settings)
     }
     return $settings;
 }
-add_filter( 'give_get_settings_gateways', 'add_getepay_gateway_settings');
+add_filter( 'give_get_settings_gateways', 'give_getepay_gateway_settings');
 /* End of Gateway Settings */
 
 function give_getepay_cc_form($form_id)
@@ -208,16 +196,16 @@ add_action( 'give_getepay_cc_form', 'give_getepay_standard_billing_fields' );
 /* End of getepay Billing Details Form */
 
 /* Create Payment Data */
-function give_getcreate_getepay_payment_dataepay_cc_form($insert_payment_data)
+function give_getepay_create_payment_data_cc_form($insert_payment_data)
 {
     $insert_payment_data['gateway'] = 'getepay';
     return $insert_payment_data;
 }
-add_filter( 'give_create_payment', 'give_getcreate_getepay_payment_dataepay_cc_form');
+add_filter( 'give_create_payment', 'give_getepay_create_payment_data_cc_form');
 /* End of Create Payment Data */
  
 /* Process GetePay Payment */
-function give_process_getepay_payment($payment_data)
+function give_getepay_process_payment($payment_data)
 {
     // Validate nonce.
     give_validate_nonce( $payment_data['gateway_nonce'], 'give-gateway' );
@@ -227,10 +215,10 @@ function give_process_getepay_payment($payment_data)
     if (empty($payment_id)) {
         // Record the error.
         give_record_gateway_error(
-            esc_html__( 'Payment Error', 'give' ),
+            esc_html__( 'Payment Error', 'payment-gateway-getepay-givewp' ),
             sprintf(
             /* translators: %s: payment data */
-                esc_html__( 'Payment creation failed before sending donor to GetePay. Payment data: %s', 'give' ),
+                esc_html__( 'Payment creation failed before sending donor to GetePay. Payment data: %s', 'payment-gateway-getepay-givewp' ),
                 json_encode( $payment_data )
             ),
             $payment_id
@@ -240,18 +228,16 @@ function give_process_getepay_payment($payment_data)
     }
 
     // Redirect to GetePay.
-    $result = construct_form_and_post($payment_id, $payment_data);
+    $result = give_getepay_construct_form_and_post($payment_id, $payment_data);
     exit;
 }
-add_action( 'give_gateway_getepay', 'give_process_getepay_payment' );
+add_action( 'give_gateway_getepay', 'give_getepay_process_payment' );
 /* End of Process GetePay Payment */
 
 /* Hidden Form Generation */
-function construct_form_and_post($payment_id, $payment_data) {
+function give_getepay_construct_form_and_post($payment_id, $payment_data) {
     
-    $post_url = give_is_test_mode() ?  'https://pay1.getepay.in:8443/getepayPortal/pg/generateInvoice' : 'https://pay1.getepay.in:8443/getepayPortal/pg/generateInvoice';
-    $phone = '-';
-    $remark = '';
+    $phone = '9999999999';
 
     // Get the success url.
     $return_url = add_query_arg( array(
@@ -260,7 +246,9 @@ function construct_form_and_post($payment_id, $payment_data) {
     ), get_permalink( give_get_option( 'success_page' ) ) );
 
     // Item name.
-    $item_name = give_build_getepay_item_title($payment_data);
+    $item_name = give_getepay_build_item_title($payment_data);
+
+    $txn_prod_desc = "GiveWP Payment Order ID: " . $payment_id;
     
     // Setup GetePay API params.
         //Getepay API
@@ -269,7 +257,6 @@ function construct_form_and_post($payment_id, $payment_data) {
         $terminalId= give_get_option("getepay_terminal_id");
         $key = give_get_option("getepay_api_key");
         $iv = give_get_option("getepay_secret_key");    
-        //$ru = get_return_url( $return_url );
 
     $args=array(
         "mid"=>$mid,
@@ -277,9 +264,9 @@ function construct_form_and_post($payment_id, $payment_data) {
         "merchantTransactionId"=>$payment_id,
         "transactionDate"=>date("Y-m-d H:i:s"),
         "terminalId"=>$terminalId,
-        "udf1"=>$payment_data['user_info']['first_name'] . ' ' . $payment_data['user_info']['last_name'],
-        "udf2"=>$phone,
-        "udf3"=>$payment_data['user_email'],
+        "udf1"=>$phone,
+        "udf2"=>$payment_data['user_email'],
+        "udf3"=>$payment_data['user_info']['first_name'] . ' ' . $payment_data['user_info']['last_name'],
         "udf4"=>"",
         "udf5"=>"",
         "udf6"=>"",
@@ -294,13 +281,11 @@ function construct_form_and_post($payment_id, $payment_data) {
         "bankId"=>"",
         "txnType"=>"single",
         "productType"=>"IPG",
-        "txnNote"=>"Getepay transaction",
+        "txnNote"=>$txn_prod_desc,
         "vpa"=>$terminalId,
     );
+    
     $json_requset = json_encode($args);
-
-    $format_amt = format_amount($args['amount']);
-    $txn_prod_desc = "Payment Order ID: " . $args['merchantTransactionId'];  
 
     $key = base64_decode($key);
     $iv = base64_decode($iv);
@@ -309,50 +294,40 @@ function construct_form_and_post($payment_id, $payment_data) {
     $ciphertext_raw = openssl_encrypt($json_requset, "AES-256-CBC", $key, $options = OPENSSL_RAW_DATA, $iv);
     $ciphertext = bin2hex($ciphertext_raw);
     $newCipher = strtoupper($ciphertext);
-    //print_r($newCipher);exit;
-    $args=array(
-        "mid"=>$mid,
-        "terminalId"=>$terminalId,
-        "req"=>$newCipher
+
+    $args = array(
+        "mid" => $mid,
+        "terminalId" => $terminalId,
+        "req" => $newCipher
     );
 
-    $curl = curl_init();
-    curl_setopt($curl, CURLOPT_URL, $url);
-    curl_setopt($curl, CURLINFO_HEADER_OUT, true);
-    curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-        'Content-Type:application/json',
+    $response = wp_remote_post($url, array(
+        'headers' => array(
+            'Content-Type' => 'application/json',
+        ),
+        'body' => json_encode($args),
     ));
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl, CURLOPT_POST, true);
-    curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($args));
-    $result = curl_exec($curl);
-    curl_close ($curl);
-    $jsonDecode = json_decode($result);
+
+    if (is_wp_error($response)) {
+        // Handle the error as needed.
+        return 'error';
+    }
+
+    $jsonDecode = json_decode($response['body']);
     $jsonResult = $jsonDecode->response;
     $ciphertext_raw = hex2bin($jsonResult);
-    $original_plaintext = openssl_decrypt($ciphertext_raw,  "AES-256-CBC", $key, $options=OPENSSL_RAW_DATA, $iv);
+    $original_plaintext = openssl_decrypt($ciphertext_raw, "AES-256-CBC", $key, $options = OPENSSL_RAW_DATA, $iv);
     $json = json_decode($original_plaintext);
 
     $pgUrl = $json->paymentUrl;
-    wp_redirect( $pgUrl );
-    //Getepay API End
+    wp_redirect($pgUrl);
+
     return 'success ...';
 }
 /* End of Hidden Form Generation */
 
 /* Return URL Processing */
-
 function give_getepay_success_page_content( $content ) {
-
-    // $merchantcode = $_REQUEST["MerchantCode"];
-    $paymentid = $_REQUEST["payment-id"];
-    $ecurrency = 'INR';
-    $remark = $_REQUEST["message"];
-    //$transid = $_REQUEST["merchantTransactionId"];
-    //$authcode = $_REQUEST["signature"];
-    $estatus = $_REQUEST["status"];
-    $errdesc = $_REQUEST["message"];
-    //$signature = $_REQUEST["signature"];
 
     if (!isset( $_GET['payment-id'] ) && ! give_get_purchase_session() ) {
         return $content;
@@ -371,8 +346,7 @@ function give_getepay_success_page_content( $content ) {
         $content = ob_get_clean();
     }
 
-    $post = $_POST;
-    $response = $post["response"];
+    $response = wp_kses_post( $_POST["response"] );
 
     $key = base64_decode(give_get_option("getepay_api_key"));
     $iv = base64_decode(give_get_option("getepay_secret_key"));
@@ -381,28 +355,20 @@ function give_getepay_success_page_content( $content ) {
     $original_plaintext = openssl_decrypt($ciphertext_raw,  "AES-256-CBC", $key, $options=OPENSSL_RAW_DATA, $iv);
 
     $json = json_decode(json_decode($original_plaintext,true),true);
-
-    // echo $json["paymentStatus"];
-    // die;
     $order_id = $json["merchantOrderNo"];
-    //$order = new WC_Order( $order_id );
-    if($json["paymentStatus"] == "SUCCESS"){
-    //if ($estatus === "success") {
-        //TODO: COMPARE Return Signature with Generated Response Signature   
+    $errdesc = $json["message"];
 
+    if($json["paymentStatus"] == "SUCCESS"){
         // Link `Transaction ID` to the donation.
         give_set_payment_transaction_id( $payment_id, $order_id );
         give_update_payment_status( $payment_id, 'publish' );
         // Send donor to `Donation Confirmation` page.
-        //give_send_to_success_page();
-
     }
     else {
-        give_record_gateway_error( __( 'GetePay Error', 'give' ), sprintf(__( $errdesc, 'give' ), json_encode( $_REQUEST ) ), $payment_id );
+        give_record_gateway_error( __( 'GetePay Error', 'payment-gateway-getepay-givewp' ), sprintf(__( esc_html_($errdesc), 'payment-gateway-getepay-givewp' )), $payment_id );
         give_set_payment_transaction_id( $payment_id, $order_id );
         give_update_payment_status( $payment_id, 'failed' );
-        give_insert_payment_note( $payment_id, __( $errdesc, 'give' ) );
-        //wp_redirect( give_get_failed_transaction_uri() );
+        give_insert_payment_note( $payment_id, __( esc_html_($errdesc), 'payment-gateway-getepay-givewp' ) );
     }
     
     return $content;
@@ -411,7 +377,7 @@ add_filter('give_payment_confirm_getepay', 'give_getepay_success_page_content');
 /* End of Return URL Processing */
 
 /* Build Item Title */
-function give_build_getepay_item_title($payment_data)
+function give_getepay_build_item_title($payment_data)
 {
     $form_id   = intval( $payment_data['post_data']['give-form-id'] );
     $item_name = $payment_data['post_data']['give-form-title'];
@@ -425,7 +391,7 @@ function give_build_getepay_item_title($payment_data)
         if ($price_level_amount != give_sanitize_amount( $payment_data['price'] )) {
             $custom_amount_text = give_get_meta( $form_id, '_give_custom_amount_text', true );
             // user custom amount text if any, fallback to default if not.
-            $item_name .= ' - ' . give_check_variable( $custom_amount_text, 'empty', esc_html__( 'Custom Amount', 'give' ) );
+            $item_name .= ' - ' . give_check_variable( $custom_amount_text, 'empty', esc_html__( 'Custom Amount', 'payment-gateway-getepay-givewp' ) );
         } //Is there any donation level text?
         elseif (! empty( $item_price_level_text )) {
             $item_name .= ' - ' . $item_price_level_text;
@@ -434,32 +400,9 @@ function give_build_getepay_item_title($payment_data)
     elseif (give_get_form_price( $form_id ) !== give_sanitize_amount( $payment_data['price'] )) {
         $custom_amount_text = give_get_meta( $form_id, '_give_custom_amount_text', true );
         // user custom amount text if any, fallback to default if not.
-        $item_name .= ' - ' . give_check_variable( $custom_amount_text, 'empty', esc_html__( 'Custom Amount', 'give' ) );
+        $item_name .= ' - ' . give_check_variable( $custom_amount_text, 'empty', esc_html__( 'Custom Amount', 'payment-gateway-getepay-givewp' ) );
     }
 
     return $item_name;
 }
 /* End of Build Item Title */
-
-/* Add Phone Number Field */
-function give_phone_number_form_fields( $form_id ) {
-	?>
-   
-	<?php
-} 
-add_action( 'give_donation_form_after_email', 'give_phone_number_form_fields', 10, 1 );
-/* End of Add Phone Number Field */
-
-/* Make Phone Number Field Required */
-// function give_required_phone_number($required_fields)
-// {
-//     $required_fields['give_phone'] =  array(
-// 		'give_phone' => array(
-// 			'error_id'      => 'invalid_phone',
-// 			'error_message' => __( 'Please enter phone number.', 'give' ),
-// 		));
-//     return $required_fields;
-// }
-// add_filter( 'give_donation_form_required_fields', 'give_required_phone_number');
-
-/* End of getepay Requery Function */

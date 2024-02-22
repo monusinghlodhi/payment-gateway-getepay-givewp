@@ -4,7 +4,7 @@
 > Tags: Getepay payment gateway<br>
 > Requires at least: 4.3<br>
 > Tested up to: 5.9.2<br>
-> Stable tag: 2.0.1<br>
+> Stable tag: 1.0.0<br>
 > License: GPLv2 or later<br>
 > License URI: http://www.gnu.org/licenses/gpl-2.0.html<br>	
 > GetePay payment gateway plugin for GiveWP.
