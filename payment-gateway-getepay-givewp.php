@@ -365,10 +365,10 @@ function give_getepay_success_page_content( $content ) {
         // Send donor to `Donation Confirmation` page.
     }
     else {
-        give_record_gateway_error( __( 'GetePay Error', 'payment-gateway-getepay-givewp' ), sprintf(__( esc_html_($errdesc), 'payment-gateway-getepay-givewp' )), $payment_id );
+        give_record_gateway_error( __( 'GetePay Error', 'payment-gateway-getepay-givewp' ), sprintf(__( esc_html($errdesc), 'payment-gateway-getepay-givewp' )), $payment_id );
         give_set_payment_transaction_id( $payment_id, $order_id );
         give_update_payment_status( $payment_id, 'failed' );
-        give_insert_payment_note( $payment_id, __( esc_html_($errdesc), 'payment-gateway-getepay-givewp' ) );
+        give_insert_payment_note( $payment_id, __( esc_html($errdesc), 'payment-gateway-getepay-givewp' ) );
     }
     
     return $content;
